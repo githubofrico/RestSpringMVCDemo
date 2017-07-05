@@ -1,0 +1,76 @@
+<!DOCTYPE web-app PUBLIC
+ "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+ "http://java.sun.com/dtd/web-app_2_3.dtd" >
+
+<web-app>
+	<listener>
+		<listener-class>
+			org.springframework.web.context.request.RequestContextListener
+		</listener-class>
+	</listener>
+
+	<!-- 利用Spring提供的ContextLoaderListener监听器去监听ServletContext对象的创建，并初始化WebApplicationContext对象 -->
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+	<!-- Context Configuration locations for Spring XML files(默认查找/WEB-INF/applicationContext.xml) -->
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>classpath:applicationContext.xml</param-value>
+	</context-param>
+
+	<!-- 配置Spring MVC的前端控制器：DispatchcerServlet -->
+	<servlet>
+		<servlet-name>SpringMVC</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<init-param>
+			<param-name>contextConfigLocation</param-name>
+			<param-value>classpath:springmvc.xml</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>SpringMVC</servlet-name>
+		<url-pattern>/</url-pattern>
+	</servlet-mapping>
+
+	<!-- Spring 提供的字符解码器：避免中文乱码 -->
+	<filter>
+		<filter-name>CharacterEncodingFilter</filter-name>
+		<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>utf-8</param-value>
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>CharacterEncodingFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+
+	<!-- 通过CORS技术实现AJAX跨域访问 -->
+	<filter>
+		<filter-name>corsFilter</filter-name>
+		<filter-class>cn.edu.tju.rico.filter.CorsFilter</filter-class>
+		<init-param>
+			<param-name>allowOrigin</param-name>
+			<param-value>http://localhost:8020</param-value>
+		</init-param>
+		<init-param>
+			<param-name>allowMethods</param-name>
+			<param-value>GET,POST,PUT,DELETE,OPTIONS</param-value>
+		</init-param>
+		<init-param>
+			<param-name>allowCredentials</param-name>
+			<param-value>true</param-value>
+		</init-param>
+		<init-param>
+			<param-name>allowHeaders</param-name>
+			<param-value>Content-Type,X-Token</param-value>
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>corsFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+</web-app>

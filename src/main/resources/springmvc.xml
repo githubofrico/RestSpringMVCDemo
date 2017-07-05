@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd     
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-4.0.xsd
+        http://www.springframework.org/schema/aop 
+        http://www.springframework.org/schema/aop/spring-aop-4.0.xsd">
+
+
+	<!-- 启用注解扫描，并定义组件查找规则 ，mvc层只负责扫描@Controller、@ControllerAdvice -->
+	<!-- base-package 如果多个，用“,”分隔 -->
+	<context:component-scan base-package="cn.edu.tju.rico"
+		use-default-filters="false">
+		<!-- 扫描@Controller -->
+		<context:include-filter type="annotation"
+			expression="org.springframework.stereotype.Controller" />
+		<!-- 控制器增强，使一个Contoller成为全局的异常处理类，类中用@ExceptionHandler方法注解的方法可以处理所有Controller发生的异常 -->
+		<context:include-filter type="annotation"
+			expression="org.springframework.web.bind.annotation.ControllerAdvice" />
+	</context:component-scan>
+
+
+	<!-- 支持Controller的AOP代理 -->
+	<aop:aspectj-autoproxy />
+
+
+	<!-- 会自动注册RequestMappingHandlerMapping与RequestMappingHandlerAdapter两个Bean， 
+		这是SpringMVC为@Controllers分发请求所必需的，并提供了数据绑定支持、@NumberFormatannotation支持、 @DateTimeFormat支持、@Valid支持、读写XML的支持和读写JSON的支持等功能。 -->
+	<mvc:annotation-driven />
+
+
+	<!-- 使用默认的Servlet来响应静态文件 -->
+	<mvc:default-servlet-handler />
+
+
+	<!-- 视图解析器 -->
+	<bean id="viewResolver"
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<!-- 前缀 -->
+		<property name="prefix">
+			<value>/WEB-INF/content/</value>
+		</property>
+		<!-- 后缀 -->
+		<property name="suffix">
+			<value>.jsp</value>
+		</property>
+	</bean>
+
+</beans>

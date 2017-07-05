@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mybatis="http://mybatis.org/schema/mybatis-spring" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+           http://www.springframework.org/schema/context
+           http://www.springframework.org/schema/context/spring-context-4.0.xsd
+           http://mybatis.org/schema/mybatis-spring 
+		   http://mybatis.org/schema/mybatis-spring.xsd
+		   http://www.springframework.org/schema/tx 
+           http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+           http://www.springframework.org/schema/aop 
+           http://www.springframework.org/schema/aop/spring-aop-4.0.xsd">
+
+	<!-- 隐式地向 Spring容器注册AutowiredAnnotationBeanPostProcessor、RequiredAnnotationBeanPostProcessor、 
+		CommonAnnotationBeanPostProcessor以及PersistenceAnnotationBeanPostProcessor这4个BeanPostProcessor。 -->
+	<!-- <context:component-scan />标签也包含了自动注入上述processor的功能，因此其可以省略 -->
+	<!-- <context:annotation-config /> -->
+
+	<!-- 启用注解扫描，并定义组件查找规则 ，除了@controller，扫描所有的Bean -->
+	<context:component-scan base-package="cn.edu.tju.rico">
+		<context:exclude-filter type="annotation"
+			expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+
+	<!-- 启用 @AspectJ -->
+	<aop:aspectj-autoproxy />
+
+
+	<!--注册Bean验证后处理器 -->
+	<bean
+		class="org.springframework.validation.beanvalidation.BeanValidationPostProcessor" />
+
+	<!--注册方法验证的后处理器 -->
+	<bean
+		class="org.springframework.validation.beanvalidation.MethodValidationPostProcessor" />
+
+
+	<!-- mybatis:scan会将cn.edu.tju.rico.mapper包里的所有接口当作mapper配置，之后可以自动引入mapper类 -->
+	<mybatis:scan base-package="cn.edu.tju.rico.mapper" />
+
+
+	<!-- 加载读取property配置文件 ,PropertyPlaceholderConfigurer(容器后处理器)支持从properties文件中读入配置并注入到bean中 -->
+	<bean
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<!-- 可从jvm虚拟机的参数中获得配置信息 -->
+		<property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE" />
+		<property name="ignoreResourceNotFound" value="true" />
+		<property name="locations">
+			<list>
+				<value>classpath:jdbc.properties</value>
+				<value>classpath:redis.properties</value>
+			</list>
+		</property>
+	</bean>
+
+
+	<!-- Mybatis数据库配置 -->
+	<!-- 配置数据源 -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="${jdbc.driverClassName}" />
+		<property name="url" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+	</bean>
+
+	<!-- 配置 sqlSessionFactory -->
+	<bean id="sessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<!-- 数据源的设置 -->
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- 事务配置 -->
+	<!-- JDBC事务管理器 -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- 启用支持annotation注解方式事务管理 -->
+	<tx:annotation-driven transaction-manager="transactionManager" />
+
+
+	<!-- jedis连接池配置 -->
+	<bean id="poolConfig" class="redis.clients.jedis.JedisPoolConfig">
+		<!-- 最小空闲连接数 -->
+		<property name="minIdle" value="${redis.minIdle}" />
+		<!-- 最大空闲连接数 -->
+		<property name="maxIdle" value="${redis.maxIdle}" />
+		<!-- 最大连接数 -->
+		<property name="maxTotal" value="${redis.maxTotal}" />
+		<!-- 获取连接时的最大等待毫秒数,小于零:阻塞不确定的时间,默认-1 -->
+		<property name="maxWaitMillis" value="${redis.maxWaitMillis}" />
+		<!-- 在获取连接的时候检查有效性, 默认false -->
+		<property name="testOnBorrow" value="${redis.testOnBorrow}" />
+		<!-- 每次释放连接的最大数目 -->
+		<property name="numTestsPerEvictionRun" value="${redis.numTestsPerEvictionRun}" />
+		<!-- 释放连接的扫描间隔（毫秒） -->
+		<property name="timeBetweenEvictionRunsMillis" value="${redis.timeBetweenEvictionRunsMillis}" />
+		<!-- 连接最小空闲时间 -->
+		<property name="minEvictableIdleTimeMillis" value="${redis.minEvictableIdleTimeMillis}" />
+		<!-- 连接空闲多久后释放, 当空闲时间>该值 且 空闲连接>最大空闲连接数 时直接释放 -->
+		<property name="softMinEvictableIdleTimeMillis" value="${redis.softMinEvictableIdleTimeMillis}" />
+		<!-- 在空闲时检查有效性, 默认false -->
+		<property name="testWhileIdle" value="${redis.testWhileIdle}" />
+		<!-- 连接耗尽时是否阻塞, false报异常,ture阻塞直到超时, 默认true -->
+		<property name="blockWhenExhausted" value="${redis.blockWhenExhausted}" />
+	</bean>
+
+	<!-- redis连接池,构造注入 -->
+	<bean id="jedisPool" class="redis.clients.jedis.JedisPool"
+		destroy-method="close">
+		<constructor-arg name="poolConfig" ref="poolConfig" />
+		<constructor-arg name="host" value="${redis.host}" />
+		<constructor-arg name="port" value="${redis.port}" />
+	</bean>
+
+	<!-- <bean id="securityAspect" class="cn.edu.tju.rico.aspect.SecurityAspect"> 
+		<property name="tokenManager" ref="tokenManager" /> <property name="tokenName" 
+		value="X-Token" /> </bean> -->
+	<bean id="tokenManager" class="cn.edu.tju.rico.authorization.DefaultTokenManager" />
+	<!-- <aop:config> <aop:aspect ref="securityAspect"> <aop:around method="execute" 
+		pointcut="@annotation(org.springframework.web.bind.annotation.RequestMapping)" 
+		/> </aop:aspect> </aop:config> -->
+</beans>
